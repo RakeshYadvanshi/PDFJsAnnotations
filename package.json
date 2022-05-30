@@ -1,0 +1,28 @@
+{
+  "name": "pdf-js-annotations-rk",
+  "version": "2.0.1",
+  "description": "Small and simple library to add annotations on top of your PDFs",
+  "scripts": {
+    "dev": "npm run development",
+    "development": "mix",
+    "watch": "mix watch",
+    "watch-poll": "mix watch -- --watch-options-poll=1000",
+    "hot": "mix watch --hot",
+    "prod": "npm run production",
+    "production": "mix --production"
+  },
+  "keywords": [],
+  "author": "Rakesh Kumar",
+  "license": "MIT",
+  "devDependencies": {
+    "cross-env": "^5.2.0",
+    "laravel-mix": "^6.0.43",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "dependencies": {
+    "fabric": "^4.4.0",
+    "jquery": "^3.6.0",
+    "jspdf": "^2.5.1",
+    "pdfjs-dist": "2.12.313"
+  }
+}
