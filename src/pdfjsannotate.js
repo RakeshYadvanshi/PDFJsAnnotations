@@ -61,7 +61,6 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
           imageCanvas.className = "pdf-image-canvas";
           imageCanvas.height = viewport.height;
           imageCanvas.width = viewport.width;
-          // imageCanvas.style.marginLeft = "-" + viewport.width / 2 + "px";
           imageCanvasContext = imageCanvas.getContext("2d");
 
           page
@@ -80,7 +79,6 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
                 $(".pdf-image-canvas").each(function (index, el) {
                   var imageCanvasElement = el;
                   imageCanvasElement.id = `page-${index + 1}-image-canvas`;
-                  // var svg = inst.buildTextSvg(viewport, textContent);
                 });
                 inst.initFabric();
               }
@@ -94,19 +92,8 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
     }
   );
 
-  this.initFabric = function (
-    // imageCanvasElement, textSvg, index
-  ) {
+  this.initFabric = function () {
     var inst = this;
-    // var background = imageCanvasElement.toDataURL("image/png");
-    // var fabricObj = new fabric.Canvas(imageCanvasElement.id, {
-    //   freeDrawingBrush: {
-    //     width: 1,
-    //     color: inst.color,
-    //   },
-    //   enableRetinaScaling: false
-    // });
-
     let canvases = $('#' + inst.container_id + ' canvas');
     canvases.each(function (index, el) {
       var background = el.toDataURL('image/png');
@@ -146,31 +133,9 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         options.ready();
       }
     });
-    // imageCanvasElement.parentNode.prepend(textSvg);
   };
 
-  // this.buildTextSvg = function (viewport, textContent) {
-  //   var svg = document.createElementNS(SVG_NS, "svg:svg");
-  //   svg.setAttribute("width", viewport.width + "px");
-  //   svg.setAttribute("height", viewport.height + "px");
-  //   svg.setAttribute("font-size", 1);
-
-  //   textContent.items.forEach(function (textItem) {
-  //     var tx = pdfjsLib.Util.transform(
-  //       pdfjsLib.Util.transform(viewport.transform, textItem.transform),
-  //       [1, 0, 0, -1, 0, 0]
-  //     );
-  //     console.log(textItem, textContent);
-
-  //     var style = textContent.styles[textItem.fontName];
-  //     var text = document.createElementNS(SVG_NS, "svg:text");
-  //     text.setAttribute("transform", "matrix(" + tx.join(" ") + ")");
-  //     text.setAttribute("font-family", style.fontFamily);
-  //     text.textContent = textItem.str;
-  //     svg.appendChild(text);
-  //   });
-  //   return svg;
-  // };
+  
 
   this.fabricClickHandler = function (event, fabricObj) {
     var inst = this;
