@@ -166,27 +166,36 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
 });
 
 
-PDFAnnotate.prototype.drawRectangle = function (opts) {
+PDFAnnotate.prototype.drawRectangle = function (opts,canvas_index=-1) {
   let inst = this;
   let rectagle = new fabric.Rect(opts);
+  if (canvas_index == -1) {
+    canvas_index = inst.active_canvas
+  }
   if (rectagle) {
-    inst.fabricObjects[inst.active_canvas].add(rectagle);
+    inst.fabricObjects[canvas_index].add(rectagle);
   }
 }
 
-PDFAnnotate.prototype.drawText = function (opts) {
+PDFAnnotate.prototype.drawText = function (opts, canvas_index = -1) {
   let inst = this;
   let text = new fabric.IText(opts);
+  if (canvas_index == -1) {
+    canvas_index = inst.active_canvas
+  }
   if (text) {
-    inst.fabricObjects[inst.active_canvas].add(text);
+    inst.fabricObjects[canvas_index].add(text);
   }
 }
 
-PDFAnnotate.prototype.drawPolygon = function (points,opts) {
+PDFAnnotate.prototype.drawPolygon = function (points, opts, canvas_index = -1) {
   let inst = this;
   let plygn = new fabric.Polygon(points,opts);
+  if (canvas_index==-1){
+    canvas_index = inst.active_canvas
+  }
   if (plygn) {
-    inst.fabricObjects[inst.active_canvas].add(plygn);
+    inst.fabricObjects[canvas_index].add(plygn);
   }
 }
 PDFAnnotate.prototype.enablePencil = function () {
