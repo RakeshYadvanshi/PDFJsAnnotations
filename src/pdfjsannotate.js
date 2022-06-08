@@ -139,9 +139,8 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
 
   this.fabricClickHandler = function (event, fabricObj) {
     var inst = this;
-    var toolObj;
     if (inst.active_tool == 2) {
-      var text = new fabric.IText("Sample text", {
+      inst.drawText("Sample text", {
         left:
           event.clientX - fabricObj.upperCanvasEl.getBoundingClientRect().left,
         top:
@@ -150,11 +149,10 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         fontSize: inst.font_size,
         selectable: true,
       });
-      fabricObj.add(text);
       inst.active_tool = 0;
     }
     else if (inst.active_tool == 4) {
-      toolObj = new fabric.Rect({
+      inst.drawRectangle({
         left: event.clientX - fabricObj.upperCanvasEl.getBoundingClientRect().left,
         top: event.clientY - fabricObj.upperCanvasEl.getBoundingClientRect().top,
         width: 100,
@@ -164,12 +162,33 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         strokeSize: inst.borderSize,
       });
     }
-    if (toolObj) {
-      fabricObj.add(toolObj);
-    }
   };
 });
 
+
+PDFAnnotate.prototype.drawRectangle = function (opts) {
+  let inst = this;
+  let rectagle = new fabric.Rect(opts);
+  if (rectagle) {
+    inst.fabricObjects[inst.active_canvas].add(rectagle);
+  }
+}
+
+PDFAnnotate.prototype.drawText = function (opts) {
+  let inst = this;
+  let text = new fabric.IText(opts);
+  if (text) {
+    inst.fabricObjects[inst.active_canvas].add(text);
+  }
+}
+
+PDFAnnotate.prototype.drawPolygon = function (points,opts) {
+  let inst = this;
+  let plygn = new fabric.Polygon(points,opts);
+  if (plygn) {
+    inst.fabricObjects[inst.active_canvas].add(plygn);
+  }
+}
 PDFAnnotate.prototype.enablePencil = function () {
   var inst = this;
   inst.active_tool = 1;
