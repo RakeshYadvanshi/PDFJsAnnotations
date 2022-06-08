@@ -268,7 +268,13 @@ PDFAnnotate.prototype.enableRectangle = function () {
     });
   }
 };
-
+PDFAnnotate.prototype.getObjects = function(canvas_index){
+let inst = this;
+  if (canvas_index == -1) {
+    canvas_index = inst.active_canvas
+  };
+  return inst.fabricObjects[canvas_index].getObjects;
+}
 PDFAnnotate.prototype.enableAddArrow = function (onDrawnCallback = null) {
   var inst = this;
   inst.active_tool = 3;
