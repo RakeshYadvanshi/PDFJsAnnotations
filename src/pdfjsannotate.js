@@ -325,9 +325,14 @@ PDFAnnotate.prototype.deleteSelectedObject = function () {
   var activeObject = inst.fabricObjects[inst.active_canvas].getActiveObject();
   if (activeObject) {
     if (confirm('Are you sure delete selected object ?')) {
-      inst.fabricObjects[inst.active_canvas].remove(activeObject);
+      inst.deleteObject(inst.active_canvas,activeObject)
     }
   }
+};
+
+PDFAnnotate.prototype.deleteObject = function (canvas_index,obj) {
+  var inst = this;
+  inst.fabricObjects[canvas_index].remove(obj);
 };
 PDFAnnotate.prototype.setBrushSize = function (size) {
   var inst = this;
