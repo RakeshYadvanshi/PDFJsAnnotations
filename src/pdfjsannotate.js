@@ -140,7 +140,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
   this.fabricClickHandler = function (event, fabricObj) {
     var inst = this;
     if (inst.active_tool == 2) {
-      inst.drawText("Sample text", {
+      inst.drawText({
         left:
           event.clientX - fabricObj.upperCanvasEl.getBoundingClientRect().left,
         top:
@@ -179,7 +179,7 @@ PDFAnnotate.prototype.drawRectangle = function (opts,canvas_index=-1) {
 
 PDFAnnotate.prototype.drawText = function (opts, canvas_index = -1) {
   let inst = this;
-  let text = new fabric.IText(opts);
+  let text = new fabric.IText("Sample text", opts);
   if (canvas_index == -1) {
     canvas_index = inst.active_canvas
   }
