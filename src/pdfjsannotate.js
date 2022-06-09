@@ -330,7 +330,7 @@ PDFAnnotate.prototype.deleteSelectedObject = function () {
   }
 };
 
-PDFAnnotate.prototype.deleteObject = function (canvas_index,obj) {
+PDFAnnotate.prototype.deleteObject = function (canvas_index, obj) {
   var inst = this;
   inst.fabricObjects[canvas_index].remove(obj);
 };
@@ -360,6 +360,10 @@ PDFAnnotate.prototype.setFontSize = function (size) {
 
 PDFAnnotate.prototype.setBorderSize = function (size) {
   this.borderSize = size;
+};
+
+PDFAnnotate.prototype.getActivePageIndex = function () {
+  return this.active_canvas;
 };
 
 PDFAnnotate.prototype.clearActivePage = function () {
