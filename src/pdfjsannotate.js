@@ -34,7 +34,8 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
   this.orientation;
   const inst = this;
 
-  this.options.Error = this.options.Error || ((reason) => { console.error(reason) });
+  this.options.error = this.options.error || ((reason) => { console.error(reason) });
+  this.options.mouseUp = this.options.mouseUp || ((e) => { });
   const loadingTask = pdfjsLib.getDocument(this.url);
   loadingTask.promise.then(
     function (pdf) {
@@ -88,7 +89,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
 
     },
     function (reason) {
-      options.Error(reason);
+      options.error(reason);
     }
   );
 
@@ -129,13 +130,14 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         inst.fabricObjectsData[index] = fabricObj.toJSON();
         fabricObj.off('after:render');
       });
+      fabricObj.on('mouse:up',options.mouseUp);
       if (index === canvases.length - 1 && typeof options.ready === 'function') {
         options.ready();
       }
     });
   };
 
-  
+
 
   this.fabricClickHandler = function (event, fabricObj) {
     var inst = this;
@@ -166,7 +168,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
 });
 
 
-PDFAnnotate.prototype.drawRectangle = function (opts,canvas_index=-1) {
+PDFAnnotate.prototype.drawRectangle = function (opts, canvas_index = -1) {
   let inst = this;
   let rectagle = new fabric.Rect(opts);
   if (canvas_index == -1) {
@@ -177,9 +179,9 @@ PDFAnnotate.prototype.drawRectangle = function (opts,canvas_index=-1) {
   }
 }
 
-PDFAnnotate.prototype.drawText = function (opts, canvas_index = -1) {
+PDFAnnotate.prototype.drawText = function (opts, input_text = "Sample text", canvas_index = -1) {
   let inst = this;
-  let text = new fabric.IText("Sample text", opts);
+  let text = new fabric.IText(input_text, opts);
   if (canvas_index == -1) {
     canvas_index = inst.active_canvas
   }
@@ -190,8 +192,8 @@ PDFAnnotate.prototype.drawText = function (opts, canvas_index = -1) {
 
 PDFAnnotate.prototype.drawPolygon = function (points, opts, canvas_index = -1) {
   let inst = this;
-  let plygn = new fabric.Polygon(points,opts);
-  if (canvas_index==-1){
+  let plygn = new fabric.Polygon(points, opts);
+  if (canvas_index == -1) {
     canvas_index = inst.active_canvas
   }
   if (plygn) {
@@ -268,8 +270,8 @@ PDFAnnotate.prototype.enableRectangle = function () {
     });
   }
 };
-PDFAnnotate.prototype.getObjects = function(canvas_index = -1){
-let inst = this;
+PDFAnnotate.prototype.getObjects = function (canvas_index = -1) {
+  let inst = this;
   if (canvas_index == -1) {
     canvas_index = inst.active_canvas
   };
@@ -325,7 +327,7 @@ PDFAnnotate.prototype.deleteSelectedObject = function () {
   var activeObject = inst.fabricObjects[inst.active_canvas].getActiveObject();
   if (activeObject) {
     if (confirm('Are you sure delete selected object ?')) {
-      inst.deleteObject(inst.active_canvas,activeObject)
+      inst.deleteObject(inst.active_canvas, activeObject)
     }
   }
 };
