@@ -177,6 +177,8 @@ PDFAnnotate.prototype.drawRectangle = function (opts, canvas_index = -1) {
   if (rectagle) {
     inst.fabricObjects[canvas_index].add(rectagle);
   }
+  return rectagle;
+
 }
 
 PDFAnnotate.prototype.drawText = function (opts, input_text = "Sample text", canvas_index = -1) {
@@ -188,6 +190,7 @@ PDFAnnotate.prototype.drawText = function (opts, input_text = "Sample text", can
   if (text) {
     inst.fabricObjects[canvas_index].add(text);
   }
+  return text;
 }
 
 PDFAnnotate.prototype.drawPolygon = function (points, opts, canvas_index = -1) {
@@ -199,6 +202,7 @@ PDFAnnotate.prototype.drawPolygon = function (points, opts, canvas_index = -1) {
   if (plygn) {
     inst.fabricObjects[canvas_index].add(plygn);
   }
+  return plygn;
 }
 PDFAnnotate.prototype.enablePencil = function () {
   var inst = this;
