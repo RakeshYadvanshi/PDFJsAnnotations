@@ -37,6 +37,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
   this.options.error = this.options.error || ((reason) => { console.error(reason) });
   this.options.mouseUp = this.options.mouseUp || ((e) => { });
   this.options.mouseHover = this.options.mouseHover || ((e) => { });
+  this.options.mouseOut = this.options.mouseOut || ((e) => { });
   const loadingTask = pdfjsLib.getDocument(this.url);
   loadingTask.promise.then(
     function (pdf) {
@@ -130,6 +131,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
       });
       fabricObj.on('mouse:up',options.mouseUp);
       fabricObj.on('mouse:over', options.mouseHover);
+      fabricObj.on('mouse:out', options.mouseOut);
       if (index === canvases.length - 1 && typeof options.ready === 'function') {
         options.ready();
       }
