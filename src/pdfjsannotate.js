@@ -40,50 +40,42 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
   this.options.mouseOut = this.options.mouseOut || ((e) => { });
   const loadingTask = pdfjsLib.getDocument(this.url);
   loadingTask.promise.then(
-    function (pdf) {
+    async function (pdf) {
       var scale = 1.3;
       inst.number_of_pages = pdf._pdfInfo.numPages;
       for (var i = 1; i <= inst.number_of_pages; i++) {
-        pdf.getPage(i).then(function (page) {
+        let page = await pdf.getPage(i);
+        if (typeof inst.format === 'undefined' ||
+          typeof inst.orientation === 'undefined') {
+          var originalViewport = page.getViewport({ scale: 1 });
+          inst.format = [originalViewport.width, originalViewport.height];
+          inst.orientation =
+            originalViewport.width > originalViewport.height ?
+              'landscape' :
+              'portrait';
+        }
 
-          if (typeof inst.format === 'undefined' ||
-            typeof inst.orientation === 'undefined') {
-            var originalViewport = page.getViewport({ scale: 1 });
-            inst.format = [originalViewport.width, originalViewport.height];
-            inst.orientation =
-              originalViewport.width > originalViewport.height ?
-                'landscape' :
-                'portrait';
-          }
+        var viewport = page.getViewport({ scale });
+        var imageCanvas = document.createElement("canvas");
+        document
+          .getElementById(inst.container_id)
+          .appendChild(imageCanvas);
+        imageCanvas.className = "pdf-image-canvas";
+        imageCanvas.height = viewport.height;
+        imageCanvas.width = viewport.width;
+        imageCanvasContext = imageCanvas.getContext("2d");
 
-          var viewport = page.getViewport({ scale });
-          var imageCanvas = document.createElement("canvas");
-          document
-            .getElementById(inst.container_id)
-            .appendChild(imageCanvas);
-          imageCanvas.className = "pdf-image-canvas";
-          imageCanvas.height = viewport.height;
-          imageCanvas.width = viewport.width;
-          imageCanvasContext = imageCanvas.getContext("2d");
+       await page.render({ canvasContext: imageCanvasContext, viewport: viewport,}).promise;
 
-          page
-            .render({
-              canvasContext: imageCanvasContext,
-              viewport: viewport,
-            })
-            .promise
-            .then(function () {
-              inst.pages_rendered++;
+        inst.pages_rendered++;
 
-              if (inst.pages_rendered == inst.number_of_pages) {
-                $(".pdf-image-canvas").each(function (index, el) {
-                  var imageCanvasElement = el;
-                  imageCanvasElement.id = `page-${index + 1}-image-canvas`;
-                });
-                inst.initFabric();
-              }
-            });
-        });
+        if (inst.pages_rendered == inst.number_of_pages) {
+          $(".pdf-image-canvas").each(function (index, el) {
+            var imageCanvasElement = el;
+            imageCanvasElement.id = `page-${index + 1}-image-canvas`;
+          });
+          inst.initFabric();
+        }
       }
 
     },
@@ -129,7 +121,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         inst.fabricObjectsData[index] = fabricObj.toJSON();
         fabricObj.off('after:render');
       });
-      fabricObj.on('mouse:up',options.mouseUp);
+      fabricObj.on('mouse:up', options.mouseUp);
       fabricObj.on('mouse:over', options.mouseHover);
       fabricObj.on('mouse:out', options.mouseOut);
       if (index === canvases.length - 1 && typeof options.ready === 'function') {
@@ -181,6 +173,21 @@ PDFAnnotate.prototype.drawRectangle = function (opts, canvas_index = -1) {
   return rectagle;
 
 }
+
+
+PDFAnnotate.prototype.addImage = function (opts, image, canvas_index = -1) {
+  let inst = this;
+  let fimage = new fabric.Image(image, opts);
+  if (canvas_index == -1) {
+    canvas_index = inst.active_canvas
+  }
+  if (fimage) {
+    inst.fabricObjects[canvas_index].add(fimage);
+  }
+  return fimage;
+
+}
+
 
 PDFAnnotate.prototype.drawText = function (opts, input_text = "Sample text", canvas_index = -1) {
   let inst = this;
