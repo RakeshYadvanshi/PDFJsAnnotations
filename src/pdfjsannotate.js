@@ -93,6 +93,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         freeDrawingBrush: {
           width: 1,
           color: inst.color,
+          allowTouchScrolling: true,
         },
       });
 
