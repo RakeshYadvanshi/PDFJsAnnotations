@@ -242,9 +242,9 @@ PDFAnnotate.prototype.savePdf = function (fileName) {
 }
 PDFAnnotate.prototype.save = function (type, options) {
   var inst = this;
-  var doc = new jsPDF();
+  var doc = new jsPDF.jsPDF();
   $.each(inst.fabricObjects, function (index, fabricObj) {
-    fabricObj.backgroundImage = false;
+    // fabricObj.backgroundImage = false; // make page blank after save fired
     if (index != 0) {
       doc.addPage();
       doc.setPage(index + 1);
@@ -259,6 +259,28 @@ PDFAnnotate.prototype.save = function (type, options) {
   });
   return doc.output(type, options);
 };
+PDFAnnotate.prototype.print = function () {
+  return new Promise((resolve,reject)=>{
+    var inst = this;
+    var blobURL = URL.createObjectURL(inst.save("blob", {  }));
+
+    iframe =  document.createElement('iframe'); //load content in an iframe to print later
+    document.body.appendChild(iframe);
+
+    iframe.style.display = 'none';
+    iframe.src = blobURL;
+    iframe.onload = function() {
+      resolve();
+      setTimeout(function() {
+        iframe.focus();
+        iframe.contentWindow.print();
+       
+      }, 1);
+    };
+  })
+ 
+};
+
 
 PDFAnnotate.prototype.enableAddText = function (text) {
   var inst = this;

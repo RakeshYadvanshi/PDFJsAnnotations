@@ -8,11 +8,13 @@ document.getElementById('file-selector').addEventListener('change', function(eve
 let pdfjsannotateInst = null;
 
 function createInstance(url) {
-	pdfjsannotateInst = new PDFAnnotate('pdf-container', url);
+	pdfjsannotateInst = new PDFAnnotate('pdf-container', url,{});
 }
 
 function savePDF() {
-    pdfjsannotateInst.savePdf('sample.pdf');
+    pdfjsannotateInst.print().then(function(){
+		console.log("working")
+	});
 }
 
 function enablePencil(e) {
