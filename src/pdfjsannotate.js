@@ -244,17 +244,17 @@ PDFAnnotate.prototype.save = function (type, options) {
   var inst = this;
   var doc = new jsPDF.jsPDF();
   $.each(inst.fabricObjects, function (index, fabricObj) {
-    // fabricObj.backgroundImage = false; // make page blank after save fired
+    //fabricObj.backgroundImage = false; // make page blank after save fired
     if (index != 0) {
       doc.addPage();
       doc.setPage(index + 1);
     }
-    doc.addImage(
-      document.getElementById(fabricObj.lowerCanvasEl.id).toDataURL(),
-      "png",
-      0,
-      0
-    );
+    // doc.addImage(
+    //   document.getElementById(fabricObj.lowerCanvasEl.id).toDataURL(),
+    //   "png",
+    //   0,
+    //   0
+    // ); // unnecessory code 
     doc.addImage(fabricObj.toDataURL(), "png", 0, 0);
   });
   return doc.output(type, options);
