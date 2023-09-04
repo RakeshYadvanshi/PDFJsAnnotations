@@ -18,7 +18,7 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) {
   this.number_of_pages = 0;
   this.pages_rendered = 0;
-  this.active_tool = 1; // 1 - Free hand, 2 - Text, 3 - Arrow
+  this.active_tool = 1; // 1 - Free hand, 2 - Text, 3 - Arrow,  4- rectangle, 5 grab-tool 
   this.fabricObjects = [];
   this.fabricObjectsData = [];
   this.textContents = []; // extra
@@ -38,9 +38,14 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
   this.options.mouseUp = this.options.mouseUp || ((e) => { });
   this.options.mouseHover = this.options.mouseHover || ((e) => { });
   this.options.mouseOut = this.options.mouseOut || ((e) => { });
+  this.options.selectionCleared = this.options.selectionCleared || function (e, t) { };
+  this.options.selectionUpdated = this.options.selectionUpdated || function (e, t) { };
+  this.options.selectionCreated = this.options.selectionCreated || function (e, t) { };
+
   const loadingTask = pdfjsLib.getDocument(this.url);
   loadingTask.promise.then(
     async function (pdf) {
+      console.log("pdf", pdf, pdfjsLib)
       var scale = 1.3;
       inst.number_of_pages = pdf._pdfInfo.numPages;
       for (var i = 1; i <= inst.number_of_pages; i++) {
@@ -65,7 +70,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         imageCanvas.width = viewport.width;
         imageCanvasContext = imageCanvas.getContext("2d");
 
-       await page.render({ canvasContext: imageCanvasContext, viewport: viewport,}).promise;
+        await page.render({ canvasContext: imageCanvasContext, viewport: viewport, }).promise;
 
         inst.pages_rendered++;
 
@@ -122,11 +127,57 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         inst.fabricObjectsData[index] = fabricObj.toJSON();
         fabricObj.off('after:render');
       });
+
+      fabricObj.on('selection:created', options.selectionCreated);
+      fabricObj.on('selection:updated', options.selectionUpdated);
+      fabricObj.on('selection:cleared', options.selectionCleared);
       fabricObj.on('mouse:up', options.mouseUp);
       fabricObj.on('mouse:over', options.mouseHover);
       fabricObj.on('mouse:out', options.mouseOut);
       if (index === canvases.length - 1 && typeof options.ready === 'function') {
         options.ready();
+
+        const container = document.getElementById(inst.container_id).parentNode;
+        let startY;
+        let startX;
+        let scrollLeft;
+        let scrollTop;
+        let isDown;
+
+        container.addEventListener('mousedown', e => mouseIsDown(e));
+        container.addEventListener('mouseup', e => mouseUp(e))
+        container.addEventListener('mouseleave', e => mouseLeave(e));
+        container.addEventListener('mousemove', e => mouseMove(e));
+
+        function mouseIsDown(e) {
+          isDown = true;
+          startY = e.pageY - container.offsetTop;
+          startX = e.pageX - container.offsetLeft;
+          scrollLeft = container.scrollLeft;
+          scrollTop = container.scrollTop;
+        }
+        function mouseUp(e) {
+          isDown = false;
+        }
+        function mouseLeave(e) {
+          isDown = false;
+        }
+        function mouseMove(e) {
+          if (isDown && inst.active_tool == 5) {
+            e.preventDefault();
+            //Move vertcally
+            const y = e.pageY - container.offsetTop;
+            const walkY = y - startY;
+           
+              container.scrollTop = scrollTop - walkY;
+
+            //Move Horizontally
+            const x = e.pageX - container.offsetLeft;
+            const walkX = x - startX;
+            container.scrollLeft = scrollLeft - walkX;
+
+          }
+        }
       }
     });
   };
@@ -145,7 +196,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         fontSize: inst.font_size,
         selectable: true,
       });
-      inst.active_tool = 0;
+      inst.setActiveTool(0);
     }
     else if (inst.active_tool == 4) {
       inst.drawRectangle({
@@ -215,7 +266,7 @@ PDFAnnotate.prototype.drawPolygon = function (points, opts, canvas_index = -1) {
 }
 PDFAnnotate.prototype.enablePencil = function () {
   var inst = this;
-  inst.active_tool = 1;
+  inst.setActiveTool(1);
   if (inst.fabricObjects.length > 0) {
     $.each(inst.fabricObjects, function (index, fabricObj) {
       fabricObj.isDrawingMode = true;
@@ -225,13 +276,17 @@ PDFAnnotate.prototype.enablePencil = function () {
 
 PDFAnnotate.prototype.enableSelector = function () {
   var inst = this;
-  inst.active_tool = 0;
+  inst.setActiveTool(0);
   if (inst.fabricObjects.length > 0) {
     $.each(inst.fabricObjects, function (index, fabricObj) {
       fabricObj.isDrawingMode = false;
     });
   }
 };
+PDFAnnotate.prototype.setActiveTool = function (tool) {
+  var inst = this;
+  inst.active_tool = tool;
+}
 
 PDFAnnotate.prototype.savePdf = function (fileName) {
   if (typeof fileName == "undefined" || fileName.length == 0)
@@ -244,47 +299,40 @@ PDFAnnotate.prototype.save = function (type, options) {
   var inst = this;
   var doc = new jsPDF.jsPDF();
   $.each(inst.fabricObjects, function (index, fabricObj) {
-    //fabricObj.backgroundImage = false; // make page blank after save fired
     if (index != 0) {
       doc.addPage();
       doc.setPage(index + 1);
     }
-    // doc.addImage(
-    //   document.getElementById(fabricObj.lowerCanvasEl.id).toDataURL(),
-    //   "png",
-    //   0,
-    //   0
-    // ); // unnecessory code 
     doc.addImage(fabricObj.toDataURL(), "png", 0, 0);
   });
   return doc.output(type, options);
 };
 PDFAnnotate.prototype.print = function () {
-  return new Promise((resolve,reject)=>{
+  return new Promise((resolve, reject) => {
     var inst = this;
-    var blobURL = URL.createObjectURL(inst.save("blob", {  }));
+    var blobURL = URL.createObjectURL(inst.save("blob", {}));
 
-    iframe =  document.createElement('iframe'); //load content in an iframe to print later
+    iframe = document.createElement('iframe'); //load content in an iframe to print later
     document.body.appendChild(iframe);
 
     iframe.style.display = 'none';
     iframe.src = blobURL;
-    iframe.onload = function() {
+    iframe.onload = function () {
       resolve();
-      setTimeout(function() {
+      setTimeout(function () {
         iframe.focus();
         iframe.contentWindow.print();
-       
+
       }, 1);
     };
   })
- 
+
 };
 
 
 PDFAnnotate.prototype.enableAddText = function (text) {
   var inst = this;
-  inst.active_tool = 2;
+  inst.setActiveTool(2);
   if (typeof text === 'string') {
     inst.textBoxText = text;
   }
@@ -298,13 +346,24 @@ PDFAnnotate.prototype.enableAddText = function (text) {
 PDFAnnotate.prototype.enableRectangle = function () {
   var inst = this;
   var fabricObj = inst.fabricObjects[inst.active_canvas];
-  inst.active_tool = 4;
+  inst.setActiveTool(4);
   if (inst.fabricObjects.length > 0) {
     $.each(inst.fabricObjects, function (index, fabricObj) {
       fabricObj.isDrawingMode = false;
     });
   }
 };
+
+PDFAnnotate.prototype.enableGrabTool = function () {
+  var inst = this;
+  inst.setActiveTool(5);
+  if (inst.fabricObjects.length > 0) {
+    $.each(inst.fabricObjects, function (index, fabricObj) {
+      fabricObj.isDrawingMode = false;
+    });
+  }
+};
+
 PDFAnnotate.prototype.getObjects = function (canvas_index = -1) {
   let inst = this;
   if (canvas_index == -1) {
@@ -314,12 +373,12 @@ PDFAnnotate.prototype.getObjects = function (canvas_index = -1) {
 }
 PDFAnnotate.prototype.enableAddArrow = function (onDrawnCallback = null) {
   var inst = this;
-  inst.active_tool = 3;
+  inst.setActiveTool(3);
   if (inst.fabricObjects.length > 0) {
     $.each(inst.fabricObjects, function (index, fabricObj) {
       fabricObj.isDrawingMode = false;
       new Arrow(fabricObj, inst.color, function () {
-        inst.active_tool = 0;
+        inst.setActiveTool(0);
         if (typeof onDrawnCallback === 'function') {
           onDrawnCallback();
         }
