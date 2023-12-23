@@ -45,49 +45,56 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
   const loadingTask = pdfjsLib.getDocument(this.url);
   loadingTask.promise.then(
     async function (pdf) {
-      console.log("pdf", pdf, pdfjsLib)
       var scale = 1.3;
       inst.number_of_pages = pdf._pdfInfo.numPages;
       for (var i = 1; i <= inst.number_of_pages; i++) {
-        let page = await pdf.getPage(i);
-        if (typeof inst.format === 'undefined' ||
-          typeof inst.orientation === 'undefined') {
-          var originalViewport = page.getViewport({ scale: 1 });
-          inst.format = [originalViewport.width, originalViewport.height];
-          inst.orientation =
-            originalViewport.width > originalViewport.height ?
-              'landscape' :
-              'portrait';
+        try {
+          let page = await pdf.getPage(i);
+          if (typeof inst.format === 'undefined' ||
+            typeof inst.orientation === 'undefined') {
+            var originalViewport = page.getViewport({ scale: 1 });
+            inst.format = [originalViewport.width, originalViewport.height];
+            inst.orientation =
+              originalViewport.width > originalViewport.height ?
+                'landscape' :
+                'portrait';
+          }
+
+          var viewport = page.getViewport({ scale });
+          var imageCanvas = document.createElement("canvas");
+          document
+            .getElementById(inst.container_id)
+            .appendChild(imageCanvas);
+          imageCanvas.className = "pdf-image-canvas";
+          imageCanvas.height = viewport.height;
+          imageCanvas.width = viewport.width;
+          imageCanvasContext = imageCanvas.getContext("2d");
+
+          await page.render({ canvasContext: imageCanvasContext, viewport: viewport, }).promise;
+
+          inst.pages_rendered++;
+
+          if (inst.pages_rendered == inst.number_of_pages) {
+            $(".pdf-image-canvas").each(function (index, el) {
+              var imageCanvasElement = el;
+              imageCanvasElement.id = `page-${index + 1}-image-canvas`;
+            });
+            inst.initFabric();
+          }
+
+        } catch (error) {
+          inst.options.error(error);
         }
 
-        var viewport = page.getViewport({ scale });
-        var imageCanvas = document.createElement("canvas");
-        document
-          .getElementById(inst.container_id)
-          .appendChild(imageCanvas);
-        imageCanvas.className = "pdf-image-canvas";
-        imageCanvas.height = viewport.height;
-        imageCanvas.width = viewport.width;
-        imageCanvasContext = imageCanvas.getContext("2d");
-
-        await page.render({ canvasContext: imageCanvasContext, viewport: viewport, }).promise;
-
-        inst.pages_rendered++;
-
-        if (inst.pages_rendered == inst.number_of_pages) {
-          $(".pdf-image-canvas").each(function (index, el) {
-            var imageCanvasElement = el;
-            imageCanvasElement.id = `page-${index + 1}-image-canvas`;
-          });
-          inst.initFabric();
-        }
       }
 
     },
     function (reason) {
-      options.error(reason);
+      inst.options.error(reason);
     }
-  );
+  ).catch(function (reason) {
+    inst.options.error(reason);
+  });
 
   this.initFabric = function () {
     var inst = this;
@@ -100,6 +107,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
           color: inst.color,
           allowTouchScrolling: true,
         },
+        enableRetinaScaling:false
       });
 
       inst.fabricObjects.push(fabricObj);
@@ -119,9 +127,12 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         background,
         fabricObj.renderAll.bind(fabricObj)
       );
-      $(fabricObj.upperCanvasEl).click(function (event) {
+      $(fabricObj.upperCanvasEl).on("click",function (event) {
         inst.active_canvas = index;
         inst.fabricClickHandler(event, fabricObj);
+      }).on("touchstart",function(event){
+        inst.active_canvas = index;
+        inst.fabricClickHandler(event.originalEvent.touches[0], fabricObj);
       });
       fabricObj.on('after:render', function () {
         inst.fabricObjectsData[index] = fabricObj.toJSON();
@@ -168,8 +179,8 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
             //Move vertcally
             const y = e.pageY - container.offsetTop;
             const walkY = y - startY;
-           
-              container.scrollTop = scrollTop - walkY;
+
+            container.scrollTop = scrollTop - walkY;
 
             //Move Horizontally
             const x = e.pageX - container.offsetLeft;
@@ -523,4 +534,15 @@ PDFAnnotate.prototype.setDefaultTextForTextBox = function (text) {
     inst.textBoxText = text;
   }
 };
+
+PDFAnnotate.prototype.destroy = function () {
+  var inst = this;
+  if (inst.fabricObjects) {
+    for (let index = 0; index < inst.fabricObjects.length; index++) {
+      console.log("cncaas", inst.fabricObjects[index], index)
+      inst.fabricObjects[index].dispose();
+    }
+  }
+};
+
 module.exports = PDFAnnotate;
