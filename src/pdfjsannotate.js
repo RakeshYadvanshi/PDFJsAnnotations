@@ -304,6 +304,7 @@ PDFAnnotate.prototype.enableSelector = function () {
   if (inst.fabricObjects.length > 0) {
     $.each(inst.fabricObjects, function (index, fabricObj) {
       fabricObj.isDrawingMode = false;
+      fabricObj.selection = true;
     });
   }
 };
@@ -384,6 +385,7 @@ PDFAnnotate.prototype.enableGrabTool = function () {
   if (inst.fabricObjects.length > 0) {
     $.each(inst.fabricObjects, function (index, fabricObj) {
       fabricObj.isDrawingMode = false;
+      fabricObj.selection = false;
     });
   }
 };
@@ -559,7 +561,6 @@ PDFAnnotate.prototype.destroy = function () {
   var inst = this;
   if (inst.fabricObjects) {
     for (let index = 0; index < inst.fabricObjects.length; index++) {
-      console.log("cncaas", inst.fabricObjects[index], index)
       inst.fabricObjects[index].dispose();
     }
   }
