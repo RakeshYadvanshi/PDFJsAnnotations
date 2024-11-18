@@ -107,7 +107,7 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
           color: inst.color,
           allowTouchScrolling: true,
         },
-        enableRetinaScaling:false
+        enableRetinaScaling: false
       });
 
       inst.fabricObjects.push(fabricObj);
@@ -127,10 +127,10 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         background,
         fabricObj.renderAll.bind(fabricObj)
       );
-      $(fabricObj.upperCanvasEl).on("click",function (event) {
+      $(fabricObj.upperCanvasEl).on("click", function (event) {
         inst.active_canvas = index;
         inst.fabricClickHandler(event, fabricObj);
-      }).on("touchstart",function(event){
+      }).on("touchstart", function (event) {
         inst.active_canvas = index;
         inst.fabricClickHandler(event.originalEvent.touches[0], fabricObj);
       });
@@ -143,8 +143,17 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
       fabricObj.on('selection:updated', options.selectionUpdated);
       fabricObj.on('selection:cleared', options.selectionCleared);
       fabricObj.on('mouse:up', options.mouseUp);
-      fabricObj.on('mouse:over', options.mouseHover);
-      fabricObj.on('mouse:out', options.mouseOut);
+      fabricObj.on('mouse:over', () => {
+        inst.active_canvas = index;
+      }).on('mouse:over', options.mouseHover);
+
+      fabricObj.on('mouse:out', () => {
+        inst.active_canvas = index;
+      }).on('mouse:out', options.mouseOut);
+
+      fabricObj.on('mouse:wheel', () => {
+        inst.active_canvas = index;
+      });
       if (index === canvases.length - 1 && typeof options.ready === 'function') {
         options.ready();
 
@@ -154,6 +163,10 @@ const PDFAnnotate = (window.PDFAnnotate = function (container_id, url, options) 
         let scrollLeft;
         let scrollTop;
         let isDown;
+
+        container.addEventListener('mousedown mouseup mouseleave mousemove', () => {
+          inst.active_canvas = index;
+        });
 
         container.addEventListener('mousedown', e => mouseIsDown(e));
         container.addEventListener('mouseup', e => mouseUp(e))
@@ -427,13 +440,20 @@ PDFAnnotate.prototype.addImageToCanvas = function () {
   }
 };
 
-PDFAnnotate.prototype.deleteSelectedObject = function () {
+PDFAnnotate.prototype.deleteSelectedObject = function (doesNotRequireConfirmation) {
   var inst = this;
   var activeObject = inst.fabricObjects[inst.active_canvas].getActiveObject();
   if (activeObject) {
-    if (confirm('Are you sure delete selected object ?')) {
+    if (doesNotRequireConfirmation) {
+
       inst.deleteObject(inst.active_canvas, activeObject)
+    } else {
+      if (confirm('Are you sure delete selected object ?')) {
+        inst.deleteObject(inst.active_canvas, activeObject)
+      }
+
     }
+
   }
 };
 
