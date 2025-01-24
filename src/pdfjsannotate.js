@@ -564,6 +564,7 @@ PDFAnnotate.prototype.destroy = function () {
       inst.fabricObjects[index].dispose();
     }
   }
+  $("#"+this.container_id).html("");
 };
 
 module.exports = PDFAnnotate;

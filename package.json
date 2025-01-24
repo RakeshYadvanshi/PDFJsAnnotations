@@ -1,6 +1,6 @@
 {
   "name": "pdf-js-annotations-rk",
-  "version": "2.2.19",
+  "version": "2.2.21",
   "description": "Small and simple library to add annotations on top of your PDFs",
   "scripts": {
     "dev": "npm run development",
@@ -23,6 +23,7 @@
     "fabric": "^5.2.1",
     "jquery": "^3.6.0",
     "jspdf": "^2.5.1",
-    "pdfjs-dist": "2.12.313"
+    "pdfjs-dist": "2.12.313",
+    "yarn": "^1.22.22"
   }
 }
